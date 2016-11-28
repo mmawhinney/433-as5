@@ -6,6 +6,8 @@
 #include "watchdog.h"
 #include <stdint.h>
 
+#include "timers.h"
+#include "serial.h"
 
 #define BAUD_RATE_115200 (115200)
 #define UART_MODULE_INPUT_CLK (48000000)
@@ -20,13 +22,37 @@
 
 static void UartInitialize(void);
 static void UartBaudRateSet(void);
+static void startup(void);
 
 int main()
 {
 	UartInitialize();
 
+	Timers_timerInit();
+	Timers_watchdogInit();
+	Serial_init();
+
+	startup();
+
+	Serial_printCommandList();
+
+	while(1) {
+		Serial_processInput();
+
+		if(Timers_isIsrFlagSet()) {
+			Timers_clearIsrFlag();
+			Timers_hitWatchdog();
+		}
+	}
+
+	return 0;
+}
+
+static void startup()
+{
 	ConsoleUtilsPrintf("Welcome to Light Bouncer\n");
 	ConsoleUtilsPrintf("By Matheson Mawhinney and Alan Lee\n");
+	ConsoleUtilsPrintf("==================================\n");
 
 	uint32_t reset = HWREG(RESET_SOURCE_REG + RESET_SOURCE_OFFSET);
 
@@ -45,12 +71,7 @@ int main()
 	}
 	HWREG(RESET_SOURCE_REG + RESET_SOURCE_OFFSET) |= reset;
 	ConsoleUtilsPrintf("\n");
-
-	return 0;
-
-
 }
-
 
 static void UartInitialize()
 {

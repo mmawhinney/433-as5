@@ -2,7 +2,6 @@
 #include "beaglebone.h"
 #include "gpio_v2.h"
 #include "hw_types.h"     
-#include "watchdog.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -108,33 +107,33 @@ static void bounceLeds()
 static void barLeds()
 {
 	static _Bool incrementBar = true;
-	static uint32_t N = LED0_PIN;
+	static uint32_t maxLEDTurnedOn = LED0_PIN;
 	GPIOPinWrite(LED_GPIO_BASE, LED0_PIN, GPIO_PIN_HIGH);
 	counter++;
 	if(counter >= delay) {
 		if(incrementBar == true) {
-			GPIOPinWrite(LED_GPIO_BASE, N, GPIO_PIN_HIGH);
-			if(N == LED3_PIN) {
+			GPIOPinWrite(LED_GPIO_BASE, maxLEDTurnedOn, GPIO_PIN_HIGH);
+			if(maxLEDTurnedOn == LED3_PIN) {
 				incrementBar = false;
 				counter = 0;
 				return;
 			}
 		} else {
-			GPIOPinWrite(LED_GPIO_BASE, N, GPIO_PIN_LOW);
+			GPIOPinWrite(LED_GPIO_BASE, maxLEDTurnedOn, GPIO_PIN_LOW);
 		}
 		
 		if(incrementBar == true) {
-			if(N == LED3_PIN) {
+			if(maxLEDTurnedOn == LED3_PIN) {
 				incrementBar = false;
-				N--;
+				maxLEDTurnedOn--;
 			} else {
-				N++;
+				maxLEDTurnedOn++;
 			}
 		} else {
-			if(N == LED1_PIN) {
+			if(maxLEDTurnedOn == LED1_PIN) {
 				incrementBar = true;
 			} else {
-				N--;
+				maxLEDTurnedOn--;
 			}
 		}
 		counter = 0;
@@ -157,8 +156,8 @@ void Leds_updateSpeed(uint32_t newSpeed)
 
 static void calcDelay()
 {
-	int i;
-	int speedDivFactor = 1;
+	uint8_t i;
+	uint32_t speedDivFactor = 1;
 	for(i = 0; i < MAX_SPEED - speed; i++) {
 		speedDivFactor *= 2;
 	}

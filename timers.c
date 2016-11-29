@@ -1,7 +1,6 @@
 
 #include "soc_AM335x.h"
 #include "beaglebone.h"
-#include "error.h"
 #include "interrupt.h"
 #include "dmtimer.h"
 #include "watchdog.h"
@@ -13,6 +12,11 @@
 
 #define TIMER_INITIAL_COUNT 0xFFFC2F6F
 #define TIMER_RLD_COUNT TIMER_INITIAL_COUNT
+
+#define WD_CLOCK (32000L)
+#define WD_TIMEOUT_S (5)
+#define WD_TIMEOUT_TICKS (WD_TIMEOUT_S * WD_CLOCK)
+#define WD_RESET_VALUE ((uint32_t)0xFFFFFFFF - WD_TIMEOUT_TICKS + 1)
 
 static void DMTimerAintcConfigure(void);
 static void DMTimerSetup(void);
@@ -58,7 +62,9 @@ static void DMTimerIsr()
 
 	Leds_doWork();
 
-	Joystick_buttonPressed();
+	Joystick_buttonPressedLeft();
+	Joystick_buttonPressedUp();
+	Joystick_buttonPressedDown();
 
 	DMTimerIntEnable(SOC_DMTIMER_2_REGS, DMTIMER_INT_OVF_EN_FLAG);
 }
@@ -80,11 +86,6 @@ static void DMTimerSetup()
 
 	DMTimerModeConfigure(SOC_DMTIMER_2_REGS, DMTIMER_AUTORLD_NOCMP_ENABLE);
 }
-
-#define WD_CLOCK (32000L)
-#define WD_TIMEOUT_S (5)
-#define WD_TIMEOUT_TICKS (WD_TIMEOUT_S * WD_CLOCK)
-#define WD_RESET_VALUE ((uint32_t)0xFFFFFFFF - WD_TIMEOUT_TICKS + 1)
 
 void Timers_watchdogInit()
 {

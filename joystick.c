@@ -1,30 +1,35 @@
 #include "soc_AM335x.h"
 #include "beaglebone.h"
 #include "gpio_v2.h"
-#include "hw_types.h"      // For HWREG(...) macro
-#include "watchdog.h"
-#include "uart_irda_cir.h"
+#include "hw_types.h"
 #include "consoleUtils.h"
-#include <stdint.h>
+#include "hw_cm_per.h"
 
 #include "joystick.h"
 #include "leds.h"
 
-#define BUTTON_GPIO_BASE (SOC_GPIO_2_REGS)
-#define BUTTON_PIN (1)
-#define DELAY_TIME 0x4000000
+#define BUTTON_GPIO_2_BASE (SOC_GPIO_2_REGS)
+#define BUTTON_PIN_LEFT (1)
+#define BUTTON_GPIO_1_BASE (SOC_GPIO_1_REGS)
+#define BUTTON_PIN_DOWN (14)
+#define BUTTON_GPIO_0_BASE (SOC_GPIO_0_REGS)
+#define BUTTON_PIN_UP (26)
 
-
-static void initializeButtonPin(void);
-static _Bool readButton(void);
+static void initializeButtonPinLeft(void);
+static void initializeButtonPinUp(void);
+static void initializeButtonPinDown(void);
+static _Bool readButtonLeft(void);
+static _Bool readButtonUp(void);
+static _Bool readButtonDown(void);
 
 void Joystick_init()
 {
-	initializeButtonPin();
+	initializeButtonPinLeft();
+	initializeButtonPinUp();
+	initializeButtonPinDown();
 }
 
-#include "hw_cm_per.h"
-void GPIO2ModuleClkConfig(void)
+static void GPIO2ModuleClkConfig(void)
 {
 
     /* Writing to MODULEMODE field of CM_PER_GPIO1_CLKCTRL register. */
@@ -68,31 +73,83 @@ void GPIO2ModuleClkConfig(void)
            CM_PER_L4LS_CLKSTCTRL_CLKACTIVITY_GPIO_2_GDBCLK));
 }
 
-static void initializeButtonPin() 
+static void initializeButtonPinLeft() 
 {
 	GPIO2ModuleClkConfig();
 
-	GPIOModuleEnable(BUTTON_GPIO_BASE);
+	GPIOModuleEnable(BUTTON_GPIO_2_BASE);
 
-	GPIOModuleReset(BUTTON_GPIO_BASE);
+	GPIOModuleReset(BUTTON_GPIO_2_BASE);
 
-	GPIODirModeSet(BUTTON_GPIO_BASE, BUTTON_PIN, GPIO_DIR_INPUT);
+	GPIODirModeSet(BUTTON_GPIO_2_BASE, BUTTON_PIN_LEFT, GPIO_DIR_INPUT);
 
 }
 
-void Joystick_buttonPressed()
+static void initializeButtonPinUp() 
 {
-	static _Bool pressed = false;
-	if(readButton()) {
-		pressed = true;
+	GPIO0ModuleClkConfig();
+
+	GPIOModuleEnable(BUTTON_GPIO_0_BASE);
+
+	GPIOModuleReset(BUTTON_GPIO_0_BASE);
+
+	GPIODirModeSet(BUTTON_GPIO_0_BASE, BUTTON_PIN_UP, GPIO_DIR_INPUT);
+}
+
+static void initializeButtonPinDown() 
+{
+	// GPIO 1 already initialized in leds.c
+	GPIODirModeSet(BUTTON_GPIO_1_BASE, BUTTON_PIN_DOWN, GPIO_DIR_INPUT);
+}
+
+void Joystick_buttonPressedLeft()
+{
+	static _Bool pressedLeft = false;
+	if(readButtonLeft()) {
+		pressedLeft = true;
 	}
-	if(pressed && !readButton()) {
+	if(pressedLeft && !readButtonLeft()) {
 		Leds_swapMode();
-		pressed = false;
+		pressedLeft = false;
 	}
 }
 
-static _Bool readButton()
+
+void Joystick_buttonPressedUp()
 {
-	return GPIOPinRead(BUTTON_GPIO_BASE, BUTTON_PIN) == 0;
+	static _Bool pressedUp = false;
+	if(readButtonUp()) {
+		pressedUp = true;
+	}
+	if(pressedUp && !readButtonUp()) {
+		Leds_updateSpeed(Leds_getSpeed() + 1);
+		pressedUp = false;
+	}
+}
+
+void Joystick_buttonPressedDown()
+{
+	static _Bool pressedDown = false;
+	if(readButtonDown()) {
+		pressedDown = true;
+	}
+	if(pressedDown && !readButtonDown()) {
+		Leds_updateSpeed(Leds_getSpeed() - 1);
+		pressedDown = false;
+	}
+}
+
+static _Bool readButtonLeft()
+{
+	return GPIOPinRead(BUTTON_GPIO_2_BASE, BUTTON_PIN_LEFT) == 0;
+}
+
+static _Bool readButtonUp()
+{
+	return GPIOPinRead(BUTTON_GPIO_0_BASE, BUTTON_PIN_UP) == 0;
+}
+
+static _Bool readButtonDown()
+{
+	return GPIOPinRead(BUTTON_GPIO_1_BASE, BUTTON_PIN_DOWN) == 0;
 }

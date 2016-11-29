@@ -1,3 +1,4 @@
+// Module defines a 10ms timer interrupt and sets the watchdog timeout to 5 seconds
 #ifndef _TIMERS_H_
 #define _TIMERS_H_
 #include <stdbool.h>

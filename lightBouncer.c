@@ -1,9 +1,7 @@
 #include "uart_irda_cir.h"
 #include "soc_AM335x.h"
-#include "beaglebone.h"
 #include "consoleUtils.h"
 #include "hw_types.h"
-#include "watchdog.h"
 #include <stdint.h>
 
 #include "timers.h"
@@ -40,9 +38,6 @@ int main()
 	
 	while(1) {
 		Serial_processInput();
-		// if(buttonPressed() == true) {
-		// 	ConsoleUtilsPrintf("joystick pressed left...\n");
-		// }
 
 		if(Timers_isIsrFlagSet()) {
 			Timers_clearIsrFlag();
@@ -108,13 +103,9 @@ static void UartInitialize()
 	ConsoleUtilsSetType(CONSOLE_UART);
 }
 
-
-/*
- ** A wrapper function performing Baud Rate settings.
- */
 static void UartBaudRateSet(void)
 {
-	unsigned int divisorValue = 0;
+	uint32_t divisorValue = 0;
 
 	/* Computing the Divisor Value. */
 	divisorValue = UARTDivisorValCompute(UART_MODULE_INPUT_CLK,

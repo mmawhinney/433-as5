@@ -3,23 +3,19 @@
 #include "interrupt.h"
 #include "beaglebone.h"
 #include "consoleUtils.h"
-#include "hw_types.h"
 #include <stdint.h>
-#include "watchdog.h"
 
 #include "serial.h"
 #include "leds.h"
 #include "timers.h"
 
-#define BAUD_RATE	115200
-#define UART_MODULE_INPUT_CLK	48000000
+#define CHAR_0 48
+#define CHAR_9 57
 
 static void UARTIsr(void);
 static void UartInterruptEnable(void);
 
-
 static volatile uint8_t rxByte = 0;
-
 
 void Serial_init()
 {
@@ -32,15 +28,15 @@ void Serial_processInput()
 		ConsoleUtilsPrintf("\n");
 		if(rxByte == '?') {
 			Serial_printCommandList();
-		} else if(rxByte >= 48 && rxByte <= 57) {
+		} else if(rxByte >= CHAR_0 && rxByte <= CHAR_9) {
 			ConsoleUtilsPrintf("Setting LED speed to %c\n", rxByte);
-			Leds_updateSpeed(rxByte - 48);
+			Leds_updateSpeed(rxByte - CHAR_0);
 		} else if(rxByte == 'a' || rxByte == 'A') {
 			ConsoleUtilsPrintf("Changing to bounce mode.\n");
-			Leds_setMode('a');
+			Leds_setMode(MODE_A);
 		} else if(rxByte == 'b' || rxByte == 'B') {
 			ConsoleUtilsPrintf("Changing to bar mode.\n");
-			Leds_setMode('b');
+			Leds_setMode(MODE_B);
 		} else if(rxByte == 'x' || rxByte == 'X') {
 			ConsoleUtilsPrintf("No longer hitting the watchdog.\n");
 			Timers_disableWatchdogHit();

@@ -1,4 +1,4 @@
-#include "timers.h"
+
 #include "soc_AM335x.h"
 #include "beaglebone.h"
 #include "error.h"
@@ -7,8 +7,10 @@
 #include "watchdog.h"
 #include <stdint.h>
 
+#include "leds.h"
+#include "timers.h"
 
-#define TIMER_INITIAL_COUNT (0xFFE00000)
+#define TIMER_INITIAL_COUNT 0xFFFC2F6F
 #define TIMER_RLD_COUNT TIMER_INITIAL_COUNT
 
 static void DMTimerAintcConfigure(void);
@@ -19,7 +21,6 @@ static volatile _Bool flagIsr = 0;
 
 void Timers_timerInit() 
 {
-
 	DMTimer2ModuleClkConfig();
 
 	IntMasterIRQEnable();
@@ -33,8 +34,6 @@ void Timers_timerInit()
 	DMTimerIntEnable(SOC_DMTIMER_2_REGS, DMTIMER_INT_OVF_EN_FLAG);
 
 	DMTimerEnable(SOC_DMTIMER_2_REGS);
-
-
 }
 
 _Bool Timers_isIsrFlagSet()
@@ -54,6 +53,8 @@ static void DMTimerIsr()
 	DMTimerIntStatusClear(SOC_DMTIMER_2_REGS, DMTIMER_INT_OVF_IT_FLAG);
 
 	flagIsr = true;
+
+	Leds_doWork();
 
 	DMTimerIntEnable(SOC_DMTIMER_2_REGS, DMTIMER_INT_OVF_EN_FLAG);
 }

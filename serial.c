@@ -8,7 +8,7 @@
 #include "watchdog.h"
 
 #include "serial.h"
-
+#include "leds.h"
 
 
 #define BAUD_RATE	115200
@@ -16,7 +16,7 @@
 
 static void UARTIsr(void);
 static void UartInterruptEnable(void);
-static void UartBaudRateSet(void);
+// static void UartBaudRateSet(void);
 
 
 static volatile uint8_t rxByte = 0;
@@ -35,10 +35,13 @@ void Serial_processInput()
 			Serial_printCommandList();
 		} else if(rxByte >= 48 && rxByte <= 57) {
 			ConsoleUtilsPrintf("Set speed to %d\n", rxByte - 48);
+			Leds_updateSpeed(rxByte - 48);
 		} else if(rxByte == 'a' || rxByte == 'A') {
 			ConsoleUtilsPrintf("Set pattern a\n");
+			Leds_setMode('a');
 		} else if(rxByte == 'b' || rxByte == 'B') {
 			ConsoleUtilsPrintf("Set pattern b\n");
+			Leds_setMode('b');
 		} else if(rxByte == 'x' || rxByte == 'X') {
 			ConsoleUtilsPrintf("Disable hitting watchdog\n");
 		} else {

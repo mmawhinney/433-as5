@@ -8,6 +8,7 @@
 
 #include "timers.h"
 #include "serial.h"
+#include "leds.h"
 
 #define BAUD_RATE_115200 (115200)
 #define UART_MODULE_INPUT_CLK (48000000)
@@ -28,14 +29,13 @@ int main()
 {
 	UartInitialize();
 
+	Leds_init();
 	Timers_timerInit();
 	Timers_watchdogInit();
 	Serial_init();
-
+	
 	startup();
-
-	Serial_printCommandList();
-
+	
 	while(1) {
 		Serial_processInput();
 
@@ -71,6 +71,8 @@ static void startup()
 	}
 	HWREG(RESET_SOURCE_REG + RESET_SOURCE_OFFSET) |= reset;
 	ConsoleUtilsPrintf("\n");
+
+	Serial_printCommandList();
 }
 
 static void UartInitialize()

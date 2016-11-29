@@ -41,7 +41,9 @@ int main()
 
 		if(Timers_isIsrFlagSet()) {
 			Timers_clearIsrFlag();
-			Timers_hitWatchdog();
+			if(Timers_shouldHitWatchdog()) {
+				Timers_hitWatchdog();
+			}
 		}
 	}
 

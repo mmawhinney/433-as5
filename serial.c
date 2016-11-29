@@ -9,14 +9,13 @@
 
 #include "serial.h"
 #include "leds.h"
-
+#include "timers.h"
 
 #define BAUD_RATE	115200
 #define UART_MODULE_INPUT_CLK	48000000
 
 static void UARTIsr(void);
 static void UartInterruptEnable(void);
-// static void UartBaudRateSet(void);
 
 
 static volatile uint8_t rxByte = 0;
@@ -34,16 +33,17 @@ void Serial_processInput()
 		if(rxByte == '?') {
 			Serial_printCommandList();
 		} else if(rxByte >= 48 && rxByte <= 57) {
-			ConsoleUtilsPrintf("Set speed to %d\n", rxByte - 48);
+			ConsoleUtilsPrintf("Setting LED speed to %c\n", rxByte);
 			Leds_updateSpeed(rxByte - 48);
 		} else if(rxByte == 'a' || rxByte == 'A') {
-			ConsoleUtilsPrintf("Set pattern a\n");
+			ConsoleUtilsPrintf("Changing to bounce mode.\n");
 			Leds_setMode('a');
 		} else if(rxByte == 'b' || rxByte == 'B') {
-			ConsoleUtilsPrintf("Set pattern b\n");
+			ConsoleUtilsPrintf("Changing to bar mode.\n");
 			Leds_setMode('b');
 		} else if(rxByte == 'x' || rxByte == 'X') {
-			ConsoleUtilsPrintf("Disable hitting watchdog\n");
+			ConsoleUtilsPrintf("No longer hitting the watchdog.\n");
+			Timers_disableWatchdogHit();
 		} else {
 			ConsoleUtilsPrintf("Invalid command\n");
 			Serial_printCommandList();
@@ -66,8 +66,6 @@ void Serial_printCommandList()
 static void UartInterruptEnable()
 {
 	IntMasterIRQEnable();
-
-	// IntAINTCInit();
 
 	IntRegister(SYS_INT_UART0INT, UARTIsr);
 

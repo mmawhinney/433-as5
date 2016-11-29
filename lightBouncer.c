@@ -9,6 +9,7 @@
 #include "timers.h"
 #include "serial.h"
 #include "leds.h"
+#include "joystick.h"
 
 #define BAUD_RATE_115200 (115200)
 #define UART_MODULE_INPUT_CLK (48000000)
@@ -33,11 +34,15 @@ int main()
 	Timers_timerInit();
 	Timers_watchdogInit();
 	Serial_init();
+	Joystick_init();
 	
 	startup();
 	
 	while(1) {
 		Serial_processInput();
+		// if(buttonPressed() == true) {
+		// 	ConsoleUtilsPrintf("joystick pressed left...\n");
+		// }
 
 		if(Timers_isIsrFlagSet()) {
 			Timers_clearIsrFlag();

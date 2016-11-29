@@ -16,6 +16,9 @@
 
 #define LED_MASK ((1<<LED0_PIN) | (1<<LED1_PIN) | (1<<LED2_PIN) | (1<<LED3_PIN))
 
+#define MAX_SPEED 9
+#define DEFAULT_SPEED 5
+
 static uint32_t speed;
 static volatile uint32_t counter;
 static uint32_t delay;
@@ -40,9 +43,9 @@ void Leds_init()
 	GPIODirModeSet(LED_GPIO_BASE, LED2_PIN, GPIO_DIR_OUTPUT);
 	GPIODirModeSet(LED_GPIO_BASE, LED3_PIN, GPIO_DIR_OUTPUT);
 
-	speed = 5;
+	speed = DEFAULT_SPEED;
 	counter = 0;
-	mode = 'a';
+	mode = MODE_A;
 	calcDelay();
 }
 
@@ -52,11 +55,20 @@ void Leds_setMode(uint8_t newMode)
 	turnAllLedsOff();
 }
 
+void Leds_swapMode()
+{
+	if(mode == MODE_A) {
+		Leds_setMode(MODE_B);
+	} else if(mode == MODE_B) {
+		Leds_setMode(MODE_A);
+	}
+}
+
 void Leds_doWork()
 {
-	if(mode == 'a') {
+	if(mode == MODE_A) {
 		bounceLeds();
-	} else if(mode == 'b') {
+	} else if(mode == MODE_B) {
 		barLeds();
 	}
 }
@@ -147,7 +159,7 @@ static void calcDelay()
 {
 	int i;
 	int speedDivFactor = 1;
-	for(i = 0; i < 9 - speed; i++) {
+	for(i = 0; i < MAX_SPEED - speed; i++) {
 		speedDivFactor *= 2;
 	}
 	delay = speedDivFactor;

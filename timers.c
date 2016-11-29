@@ -9,6 +9,7 @@
 
 #include "leds.h"
 #include "timers.h"
+#include "joystick.h"
 
 #define TIMER_INITIAL_COUNT 0xFFFC2F6F
 #define TIMER_RLD_COUNT TIMER_INITIAL_COUNT
@@ -18,6 +19,7 @@ static void DMTimerSetup(void);
 static void DMTimerIsr(void);
 
 static volatile _Bool flagIsr = 0;
+static _Bool hitWatchdog = true;
 
 void Timers_timerInit() 
 {
@@ -56,6 +58,8 @@ static void DMTimerIsr()
 
 	Leds_doWork();
 
+	Joystick_buttonPressed();
+
 	DMTimerIntEnable(SOC_DMTIMER_2_REGS, DMTIMER_INT_OVF_EN_FLAG);
 }
 
@@ -77,11 +81,8 @@ static void DMTimerSetup()
 	DMTimerModeConfigure(SOC_DMTIMER_2_REGS, DMTIMER_AUTORLD_NOCMP_ENABLE);
 }
 
-
-
-
 #define WD_CLOCK (32000L)
-#define WD_TIMEOUT_S (30)
+#define WD_TIMEOUT_S (5)
 #define WD_TIMEOUT_TICKS (WD_TIMEOUT_S * WD_CLOCK)
 #define WD_RESET_VALUE ((uint32_t)0xFFFFFFFF - WD_TIMEOUT_TICKS + 1)
 
@@ -102,4 +103,14 @@ void Timers_hitWatchdog()
 	triggerCounter++;
 
 	WatchdogTimerTriggerSet(SOC_WDT_1_REGS, triggerCounter);
+}
+
+_Bool Timers_shouldHitWatchdog()
+{
+	return hitWatchdog;
+}
+
+void Timers_disableWatchdogHit()
+{
+	hitWatchdog = false;
 }

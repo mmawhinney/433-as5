@@ -10,6 +10,8 @@ void Timers_clearIsrFlag(void);
 // Watchdog timer controls
 void Timers_watchdogInit(void);
 void Timers_hitWatchdog(void);
+_Bool Timers_shouldHitWatchdog(void);
+void Timers_disableWatchdogHit();
 
 
 #endif
